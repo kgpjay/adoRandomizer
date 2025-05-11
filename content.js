@@ -41,7 +41,7 @@ async function myCustomFunction() {
     }
 }
 
-function Random() {
+async function Random() {
     // use map to choose and click, if empty the create new 
 
     //get li items and unselect all 
@@ -52,15 +52,7 @@ function Random() {
     }
     unselectItems(listItems);
 
-    // create map if empty 
-    if (itemsMap.size == 0) {
-        listItems.forEach(item => {
-            const key = item.querySelector("span.text-ellipsis").innerText;
-            const value = item;
-            itemsMap.set(key, value);
-        });
-    }
-
+    await UpdateMap();
 
     //choose random index in map, click, and remove from map
     const keys = itemsMap.keys().toArray();
@@ -69,6 +61,12 @@ function Random() {
     clickItem(itemsMap.get(keys[randomIndex]));
 
     itemsMap.delete(keys[randomIndex]);
+    await chrome.storage.local.remove(keys[randomIndex]).then( ()=>{});
+    const sizeObj = await chrome.storage.local.get(["size"]);
+    sizeObj.size--;
+    chrome.storage.local.set({"size" : sizeObj.size}).then( ()=>{
+        console.log("size updated", sizeObj);
+    }); 
 }
 
 
@@ -86,7 +84,38 @@ function clickItem(item) {
     return item.dispatchEvent(event);
 }
 
+async function UpdateMap(){
+    let sizeObj = await chrome.storage.local.get(["size"]);
+    const listItems = document.querySelectorAll("li.bolt-list-box-multi-select-row");
+    if (!listItems) {
+        console.log("Cant find li items");
+        return;
+    }
 
+    if(sizeObj.size == 0){
+        for(const item of listItems){
+            const key = item.querySelector("span.text-ellipsis").innerText;
+            const value = item;
+            itemsMap.set(key, value);
+            await chrome.storage.local.set({key: 1}).then( ()=>{}); 
+            sizeObj.size++;
+        }
+        chrome.storage.local.set({"size" : sizeObj.size}).then( ()=>{
+            console.log("size created", sizeObj);
+        }); 
+    }
+    else if(sizeObj.size != itemsMap.size){
+        const allItems = await chrome.storage.local.get(null); 
+        const allKeys = Object.keys(allItems).filter(key => key !== "size");
+        listItems.forEach(item => {
+            const key = item.querySelector("span.text-ellipsis").innerText;
+            const value = item;
+            if(allKeys.includes(key)){
+                itemsMap.set(key, value);
+            }
+        }); 
+    }
+}
 
 
 const divobs = document.querySelector("div.bolt-portal-host");
@@ -103,7 +132,19 @@ if(divobs){
     });
 }
 
+chrome.storage.local.get(["size"]).then(result => {
+    console.log(result); 
+    if(result.size == undefined){
+        chrome.storage.local.set({"size" : 0 }).then( ()=>{
+            console.log("local storage initialized");
+        } ); 
+    }
+    else{
+        console.log("size already initialized", result.key, result.size);
+    }
+}) 
 const itemsMap = new Map();
+
 
 // ass_btn.addEventListener('click', clicked); 
   // ass_btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
