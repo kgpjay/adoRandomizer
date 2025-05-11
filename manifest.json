@@ -1,0 +1,16 @@
+{
+  "name": "ADO sprint board randomizer",
+  "description": "Giving a button to randomize devs selection in ado sprint board",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "hello.html",
+    "default_icon": "hello_extensions.png"
+  }, 
+  "content_scripts": [
+    {
+      "matches": ["*://dev.azure.com/*"], 
+      "js": ["content.js"]
+    }
+  ]
+}
