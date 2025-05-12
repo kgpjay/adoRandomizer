@@ -50,7 +50,7 @@ async function myCustomFunction() {
     }
 }
 
-function Random() {
+async function Random() {
     // use map to choose and click, if empty the create new 
     console.log("Random clicked");
 
@@ -63,26 +63,56 @@ function Random() {
     unselectItems(listItems);
 
     // create map if empty 
-    if (itemsMap.size == 0) {
+    // if (itemsMap.size == 0) {
+    //     listItems.forEach(item => {
+    //         const key = item.querySelector("span.text-ellipsis").innerText;
+    //         itemsMap.set(key, 1);
+    //     });
+    // }
+
+
+    // //choose random index in map, click, and remove from map
+    // const keys = itemsMap.keys().toArray();
+    // const randomIndex = Math.floor(Math.random() * keys.length);
+    // listItems.forEach(item => {
+    //     const key = item.querySelector("span.text-ellipsis").innerText;
+    //     if (key == keys[randomIndex]) {
+    //         clickItem(item);
+    //         console.log("Item clicked", item);
+    //     }
+    // })
+
+    // itemsMap.delete(keys[randomIndex]);
+
+    //using chrome storage 
+    const sizeObj = await chrome.storage.local.get("size");
+    if(sizeObj.size == 0){
         listItems.forEach(item => {
             const key = item.querySelector("span.text-ellipsis").innerText;
-            itemsMap.set(key, 1);
-        });
+            chrome.storage.local.set({[key]: 1}).then(() => {
+                sizeObj.size++;
+            });
+        })
+        chrome.storage.local.set(sizeObj).then(()=>{});
     }
 
-
-    //choose random index in map, click, and remove from map
-    const keys = itemsMap.keys().toArray();
+    const keyObjList = await chrome.storage.local.get(null);
+    const keys = Object.keys(keyObjList).filter(key => key !== "size");
     const randomIndex = Math.floor(Math.random() * keys.length);
+    const randomKey = keys[randomIndex];
     listItems.forEach(item => {
         const key = item.querySelector("span.text-ellipsis").innerText;
-        if (key == keys[randomIndex]) {
+        if (key == randomKey) {
             clickItem(item);
             console.log("Item clicked", item);
         }
-    })
-
-    itemsMap.delete(keys[randomIndex]);
+    }); 
+    sizeObj.size--;
+    chrome.storage.local.set(sizeObj).then(()=>{});
+    chrome.storage.local.remove(randomKey).then(() => {
+        console.log("Removed key", randomKey);
+    });
+    console.log("Size left", sizeObj.size);
 }
 
 
@@ -118,7 +148,14 @@ if(divobs){
     });
 }
 
-const itemsMap = new Map();
+// const itemsMap = new Map();
+chrome.storage.local.get("size").then((result) => {
+    if(result.size == undefined){
+        chrome.storage.local.set({size: 0}).then(() => {
+            console.log("No size in storage, setting to 0");
+        }); 
+    }
+})
 
 // ass_btn.addEventListener('click', clicked); 
   // ass_btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
