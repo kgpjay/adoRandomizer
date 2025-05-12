@@ -10,6 +10,15 @@ function checkDropdown() {
     else return false;
 }
 
+function getListItems() {
+    const listItems = document.querySelectorAll("li.bolt-list-box-multi-select-row");
+    if (!listItems) {
+        console.log("Cant find li items");
+        return undefined;
+    }
+    return listItems;
+}
+
 // Example function to call on changes
 async function myCustomFunction() {
     console.log('Detected change in body – running function.');
@@ -43,9 +52,10 @@ async function myCustomFunction() {
 
 function Random() {
     // use map to choose and click, if empty the create new 
+    console.log("Random clicked");
 
     //get li items and unselect all 
-    const listItems = document.querySelectorAll("li.bolt-list-box-multi-select-row");
+    const listItems = getListItems();
     if (!listItems) {
         console.log("Cant find li items");
         return;
@@ -56,8 +66,7 @@ function Random() {
     if (itemsMap.size == 0) {
         listItems.forEach(item => {
             const key = item.querySelector("span.text-ellipsis").innerText;
-            const value = item;
-            itemsMap.set(key, value);
+            itemsMap.set(key, 1);
         });
     }
 
@@ -65,8 +74,13 @@ function Random() {
     //choose random index in map, click, and remove from map
     const keys = itemsMap.keys().toArray();
     const randomIndex = Math.floor(Math.random() * keys.length);
-
-    clickItem(itemsMap.get(keys[randomIndex]));
+    listItems.forEach(item => {
+        const key = item.querySelector("span.text-ellipsis").innerText;
+        if (key == keys[randomIndex]) {
+            clickItem(item);
+            console.log("Item clicked", item);
+        }
+    })
 
     itemsMap.delete(keys[randomIndex]);
 }
@@ -79,6 +93,7 @@ function unselectItems(listItems) {
 }
 
 function clickItem(item) {
+    console.log("Clicking item", item);
     const event = new MouseEvent('click', {
         bubbles: true,
         cancelable: true
