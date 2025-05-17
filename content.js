@@ -131,8 +131,36 @@ function clickItem(item) {
     return item.dispatchEvent(event);
 }
 
+async function resetCache(){
+    console.log("Cache Reset Successfull");
+    const  sizeObj = await chrome.storage.local.get("size");
+    if(sizeObj.size == undefined) initCache(); 
+    else{
+        sizeObj.size = 0; 
+        await chrome.storage.local.set(sizeObj);
+    }
+    return true; 
+}
+
+function initCache(){
+    chrome.storage.local.get("size").then((result) => {
+        if (result.size == undefined) {
+            chrome.storage.local.set({ size: 0 }).then(() => {
+                console.log("No size in storage, setting to 0");
+            });
+        }
+    })
+}
 
 
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if(request.reset){
+            resetCache();
+            sendResponse("Cache Reset Successfull");
+        } 
+    }
+)
 
 const divobs = document.querySelector("div.bolt-portal-host");
 const observer = new MutationObserver((mutationsList, observer) => {
@@ -149,13 +177,7 @@ if(divobs){
 }
 
 // const itemsMap = new Map();
-chrome.storage.local.get("size").then((result) => {
-    if(result.size == undefined){
-        chrome.storage.local.set({size: 0}).then(() => {
-            console.log("No size in storage, setting to 0");
-        }); 
-    }
-})
+initCache(); 
 
 // ass_btn.addEventListener('click', clicked); 
   // ass_btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
