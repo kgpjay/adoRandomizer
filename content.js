@@ -158,7 +158,11 @@ chrome.runtime.onMessage.addListener(
         if(request.reset){
             resetCache();
             sendResponse("Cache Reset Successfull");
-        } 
+        }
+        else if(request.alert){
+            alert("This action can only be used on dev.azure.com pages.");
+            sendResponse("Alert shown");
+        }
     }
 )
 

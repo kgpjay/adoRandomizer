@@ -10,7 +10,5 @@ async function resetCache() {
             reset: true
         });
         console.log(response);
-    } else {
-        alert("This action can only be used on dev.azure.com pages.");
     }
 }
